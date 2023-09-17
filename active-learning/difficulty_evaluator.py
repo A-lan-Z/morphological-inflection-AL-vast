@@ -50,8 +50,8 @@ if __name__ == "__main__":
     train_file_name = sys.argv[1]
     test_file_name = sys.argv[2]
 
-    train_file_path = f"../2022InflectionST/part1/development_languages/{train_file_name}"
-    test_file_path = f"../2022InflectionST/part1/development_languages/{test_file_name}"
+    train_file_path = f"dataset/{train_file_name}"
+    test_file_path = f"dataset/{test_file_name}"
     output_file_path = f"checkpoints/sig22/transformer/{test_file_name.split('.')[0]}_difficulty.tsv"
 
     main(train_file_path, test_file_path, output_file_path)

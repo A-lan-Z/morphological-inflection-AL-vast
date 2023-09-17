@@ -23,10 +23,10 @@ dropout=0.3
 ckpt_dir=checkpoints/sig22
 
 case "$lang" in
-*) trn_path=../2022InflectionST/part1/development_languages ;;
+*) trn_path=dataset ;;
 #*) trn_path=2021Task0/part1/development_languages ;;
 esac
-tst_path=../2022InflectionST/part1/development_languages
+tst_path=dataset
 #tst_path=2021Task0/part1/ground-truth
 
 python3 src/active_learning_train.py \

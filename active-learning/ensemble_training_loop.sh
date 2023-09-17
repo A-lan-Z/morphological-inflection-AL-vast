@@ -1,15 +1,15 @@
 #!/bin/bash
 
 model=transformer
-train_file=../2022InflectionST/part1/development_languages/kor_al.train
-pool_file=../2022InflectionST/part1/development_languages/kor_pool.train
+train_file=dataset/kor_al.train
+pool_file=dataset/kor_pool.train
 
 for suffix in al; do
     for lang in kor; do
 
 #        2594 28399 15102 506 27827
         # Loop to run the training 5 times
-        for i in {1..1}; do
+        for i in {1..25}; do
             python active-learning/difficulty_evaluator.py "${lang}_al.train" "${lang}.gold"
 
             for seed in 2594 28399 15102 506 27827; do

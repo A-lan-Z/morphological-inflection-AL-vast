@@ -35,7 +35,7 @@ def save_to_file(lemmas, densities, filename):
     print("Results saved successfully!")
 
 def main():
-    input_file = '../../2022InflectionST/part1/development_languages/kor_pool.train'
+    input_file = '../dataset/kor_pool.train'
     output_file = 'kor_density.tsv'
 
     print(f"Reading data from {input_file}...")

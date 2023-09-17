@@ -92,7 +92,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     directory_path = f"../experiments/experiment_0/{language}"
-    difficulty_file_path = f"../../2022InflectionST/part1/development_languages/{language}_difficulty.tsv"
+    difficulty_file_path = f"../dataset/{language}_difficulty.tsv"
     output_file_path = f"../experiments/experiment_0/{language}/{language}_accuracies.tsv"
 
     process_directory(directory_path, difficulty_file_path, output_file_path)

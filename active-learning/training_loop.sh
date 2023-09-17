@@ -5,15 +5,15 @@ model=transformer
 for suffix in al; do
     for lang in kor; do
         # Backup the initial training and pool data
-        cp "../2022InflectionST/part1/development_languages/${lang}_al.train" "../2022InflectionST/part1/development_languages/${lang}_al.train_backup"
-        cp "../2022InflectionST/part1/development_languages/${lang}_pool.train" "../2022InflectionST/part1/development_languages/${lang}_pool.train_backup"
+        cp "dataset/${lang}_al.train" "dataset/${lang}_al.train_backup"
+        cp "dataset/${lang}_pool.train" "dataset/${lang}_pool.train_backup"
 
 #        2594 28399 15102 506 27827
         # Loop to run the training 5 times
         for seed in 2594; do
             # Restore the training and pool data to their initial states
-            cp "../2022InflectionST/part1/development_languages/${lang}_al.train_backup" "../2022InflectionST/part1/development_languages/${lang}_al.train"
-            cp "../2022InflectionST/part1/development_languages/${lang}_pool.train_backup" "../2022InflectionST/part1/development_languages/${lang}_pool.train"
+            cp "dataset/${lang}_al.train_backup" "dataset/${lang}_al.train"
+            cp "dataset/${lang}_pool.train_backup" "dataset/${lang}_pool.train"
 
             for i in {1..25}; do
                 python active-learning/difficulty_evaluator.py "${lang}_al.train" "${lang}.gold"
@@ -45,7 +45,7 @@ for suffix in al; do
         done
 
         # Optionally, remove the backup files after all seeds are processed
-        rm "../2022InflectionST/part1/development_languages/${lang}_al.train_backup"
-        rm "../2022InflectionST/part1/development_languages/${lang}_pool.train_backup"
+        rm "dataset/${lang}_al.train_backup"
+        rm "dataset/${lang}_pool.train_backup"
     done
 done
