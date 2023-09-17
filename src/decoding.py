@@ -490,8 +490,6 @@ def decode_beam_transformer(
     for prob in probs:
         # Consider only probabilities >= 0.05
         filtered_probs = prob[prob > 0]
-        if len(filtered_probs) == 0:
-            print("Warning: nothing in filtered_probs!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         entropy = -torch.sum(filtered_probs * torch.log(filtered_probs))
         entropies.append(entropy.item())
 
