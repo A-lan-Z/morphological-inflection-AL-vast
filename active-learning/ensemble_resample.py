@@ -25,46 +25,45 @@ def read_tsv_files(directory, i):
             f.close()
     return files_data
 
+
+def log_probs_to_probs(log_probs):
+    return F.softmax(torch.tensor(log_probs), dim=0).tolist()
+
+
 def calculate_entropy(probs):
-    return -sum(p * torch.log(p) for p in probs if p > 0)
+    return -sum(p * torch.log(p) for p in probs if p >= 0.05)
 
 
 def resample_and_calculate_entropy(files_data):
     results = []
     entropies = []
 
-    for i, row in enumerate(files_data[0]):
-        sequence_probs = {}
+    for index, row in enumerate(files_data[0]):
+        sequence_denorm_probs = {}
         for file_data in files_data:
             # print(f"Processing row {i} of {len(files_data[0])}. Current file_data length: {len(file_data)}")
-            if i >= len(file_data):
-                print(f"Error: Index {i} is out of range for current file_data with length {len(file_data)}. Skipping this file.")
+            if index >= len(file_data):
+                print(f"Error: Index {index} is out of range for current file_data with length {len(file_data)}. Skipping this file.")
                 continue
-            _, all_predictions, all_probs = file_data[i]
+            _, all_predictions, all_log_probs, all_probs, all_dists = file_data[index]
             predictions = all_predictions.split('|')
-            probs = [float(p) for p in all_probs.split('|')]
+            denorm_probs = [float(p) for p in all_probs.split('|')]
 
-            for pred, prob in zip(predictions, probs):
-                if pred not in sequence_probs:
-                    sequence_probs[pred] = []
-                sequence_probs[pred].append(prob)
+            for pred, denorm_prob in zip(predictions, denorm_probs):
+                if pred not in sequence_denorm_probs:
+                    sequence_denorm_probs[pred] = []
+                sequence_denorm_probs[pred].append(denorm_prob)
 
-        for pred, probs in sequence_probs.items():
-            # Normalize the accumulated probability by the length of the prediction
-            denominator = len(files_data) * len(pred.split())
-            if denominator == 0:
-                print(f"Warning: Denominator is zero for pred: {pred}")
-                sequence_probs[pred] = 0
-            else:
-                sequence_probs[pred] = sum(probs) / denominator
+        for pred, probs in sequence_denorm_probs.items():
+            sequence_denorm_probs[pred] = sum(probs) / 5
 
-        best_prediction = max(sequence_probs, key=sequence_probs.get)
-        best_prob = sequence_probs[best_prediction]
+        best_prediction = max(sequence_denorm_probs, key=sequence_denorm_probs.get)
+        best_prob = sequence_denorm_probs[best_prediction]
         target = row[0]
 
-        entropy = calculate_entropy(torch.tensor(list(sequence_probs.values())))
+        entropy = calculate_entropy(torch.tensor(list(sequence_denorm_probs.values())))
         results.append((best_prediction, target, best_prob, entropy.item()))
-        entropies.append((i, entropy.item()))
+        entropies.append((index, entropy.item()))
 
     return results, sorted(entropies, key=lambda x: x[1], reverse=True)[:250]
 
