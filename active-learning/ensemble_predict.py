@@ -67,34 +67,37 @@ def calculate_average_probability(files_data, use_log_probs=False):
                 sequence_denorm_probs[pred].append(denorm_probs)
                 sequence_dists[pred] = dist
 
-        # No need to divide, order of probs doesn't change
-        # for pred, probs in sequence_probs.items():
-        #     denominator = len(files_data)
-        #     if denominator == 0:
-        #         print(f"Warning: Denominator is zero for pred: {pred}")
-        #         sequence_probs[pred] = 0
-        #     else:
-        #         sequence_probs[pred] = sum(probs) / denominator
         for pred, probs in sequence_probs.items():
-            sequence_probs[pred] = sum(probs)
+            sequence_probs[pred] = sum(probs) / 5
 
         for pred, denorm_probs in sequence_denorm_probs.items():
-            sequence_denorm_probs[pred] = sum(denorm_probs)
+            sequence_denorm_probs[pred] = sum(denorm_probs) / 5
 
         best_prediction = max(sequence_probs, key=sequence_probs.get)
         best_prob = sequence_probs[best_prediction]
         target = row[0]
 
         # Retrieve the edit distance for the best prediction
-        edit_dist = sequence_dists[best_prediction]
+        edit_dist = int(sequence_dists[best_prediction]) - 2     # remove edit distance for BOS_IDX & EOS_IDX
 
         if best_prediction == target:
             correct_predictions += 1
 
         # Calculate entropy using denormalized probability
         entropy = calculate_entropy(torch.tensor(list(sequence_denorm_probs.values())))
-        results.append(
-            (best_prediction, target, best_prob, entropy.item(), edit_dist))
+        if entropy == 0:
+            print("Warning: entropy is 0 for " + target + "  prediction is " + best_prediction)
+
+            # Sort the dictionary by values in descending order and take the top 5 items
+            top_5_probs = sorted(sequence_denorm_probs.items(), key=lambda x: x[1], reverse=True)[:5]
+
+            print("Top 5 Denorm_Probs:")
+            for key, value in top_5_probs:
+                print(f"{key}: {value}")
+
+            results.append((best_prediction, target, best_prob, float('inf'), edit_dist))
+        else:
+            results.append((best_prediction, target, best_prob, entropy.item(), edit_dist))
 
     accuracy = correct_predictions / total_predictions
     return results, accuracy
