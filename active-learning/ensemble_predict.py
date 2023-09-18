@@ -75,6 +75,11 @@ def calculate_average_probability(files_data, use_log_probs=False):
         #         sequence_probs[pred] = 0
         #     else:
         #         sequence_probs[pred] = sum(probs) / denominator
+        for pred, probs in sequence_probs.items():
+            sequence_probs[pred] = sum(probs)
+
+        for pred, denorm_probs in sequence_denorm_probs.items():
+            sequence_denorm_probs[pred] = sum(denorm_probs)
 
         best_prediction = max(sequence_probs, key=sequence_probs.get)
         best_prob = sequence_probs[best_prediction]
