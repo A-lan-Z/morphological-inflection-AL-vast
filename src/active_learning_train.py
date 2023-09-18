@@ -278,7 +278,7 @@ class Trainer(BaseTrainer):
         entropy_list = []
         with open(f"{write_fp}.{mode}.tsv", "w") as fp:
             if self.params.decode == Decode.ensemble:
-                fp.write("target\tall_predictions\tall_log_probs\tdenormalized_probs\n")
+                fp.write("target\tall_predictions\tall_log_probs\tdenormalized_probs\tedit_distance\n")
             else:
                 fp.write("prediction\ttarget\tloss\tdist\tnll\tentropy\n")
 
@@ -289,6 +289,10 @@ class Trainer(BaseTrainer):
                 if self.params.decode == Decode.ensemble:
                     trg = util.unpack_batch(trg)
                     for t, all_sequences, all_log_probs, probs in zip(trg, pred, nlls, entropies):
+                        dists = []
+                        # Calculate edit distance for all sequences
+                        for seq in all_sequences:
+                            dists.append(util.edit_distance(seq, t))
                         t = self.data.decode_target(t)
 
                         # Preprocess each prediction in all_sequences
@@ -299,7 +303,7 @@ class Trainer(BaseTrainer):
                         all_log_probs = [str(log_prob.cpu().item()) for log_prob in all_log_probs]
                         probs = [str(prob.cpu().item()) for prob in probs]
 
-                        fp.write(f'{" ".join(t)}\t{"|".join(all_sequences)}\t{"|".join(all_log_probs)}\t{"|".join(probs)}\n')
+                        fp.write(f'{" ".join(t)}\t{"|".join(all_sequences)}\t{"|".join(all_log_probs)}\t{"|".join(probs)}\t{"|".join(dists)}\n')
                         cnt += 1
                 else:
                     self.evaluator.add(src, pred, trg)

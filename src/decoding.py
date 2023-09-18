@@ -479,27 +479,27 @@ def decode_beam_transformer(
     denormalized_log_likelihoods = [[(score * length, seq) for score, seq, length in beams] for beams in
                                     finish_beams]
 
-    log_likelihoods = [[(score, seq) for score, seq, length in beams] for beams in finish_beams]
+    # log_likelihoods = [[(score, seq) for score, seq, length in beams] for beams in finish_beams]
 
     # Convert denormalized log likelihoods to probabilities
-    probs = [F.softmax(torch.tensor([b[0] for b in beams]), dim=0) for beams in log_likelihoods]
+    probs = [F.softmax(torch.tensor([b[0] for b in beams]), dim=0) for beams in denormalized_log_likelihoods]
 
     # Compute entropy for each set of probabilities
     entropies = []
     scaled_entropies = []
     for prob in probs:
         # Consider only probabilities >= 0.05
-        filtered_probs = prob[prob > 0]
+        filtered_probs = prob[prob >= 0.05]
         entropy = -torch.sum(filtered_probs * torch.log(filtered_probs))
         entropies.append(entropy.item())
 
-        # Maximum Entropy Scaling
-        max_entropy = torch.log(torch.tensor(len(filtered_probs)))
-        scaled_entropy = entropy / max_entropy
-        scaled_entropies.append(scaled_entropy.item())
+        # # Maximum Entropy Scaling
+        # max_entropy = torch.log(torch.tensor(len(filtered_probs)))
+        # scaled_entropy = entropy / max_entropy
+        # scaled_entropies.append(scaled_entropy.item())
 
     normalized_nlls = [-max(b)[0].item() if b else float('inf') for b in finish_beams]
-    return [max(b)[1] if b else [] for b in finish_beams], None, normalized_nlls, scaled_entropies
+    return [max(b)[1] if b else [] for b in finish_beams], None, normalized_nlls, entropies
 
 
 def decode_beam_transformer_ensemble(

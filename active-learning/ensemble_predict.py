@@ -35,68 +35,59 @@ def calculate_entropy(probs):
     return -sum(p * torch.log(p) for p in probs if p > 0)
 
 
-def edit_distance(str1, str2):
-    """Simple Levenshtein implementation for evalm."""
-    table = np.zeros([len(str2) + 1, len(str1) + 1])
-    for i in range(1, len(str2) + 1):
-        table[i][0] = table[i - 1][0] + 1
-    for j in range(1, len(str1) + 1):
-        table[0][j] = table[0][j - 1] + 1
-    for i in range(1, len(str2) + 1):
-        for j in range(1, len(str1) + 1):
-            if str1[j - 1] == str2[i - 1]:
-                dg = 0
-            else:
-                dg = 1
-            table[i][j] = min(
-                table[i - 1][j] + 1, table[i][j - 1] + 1, table[i - 1][j - 1] + dg
-            )
-    return int(table[len(str2)][len(str1)])
-
-
 def calculate_average_probability(files_data, use_log_probs=False):
     results = []
     correct_predictions = 0
     total_predictions = len(files_data[0])
 
     for index, row in enumerate(files_data[0]):
+        sequence_denorm_probs = {}
         sequence_probs = {}
+        sequence_dists = {}
         for file_data in files_data:
             if index >= len(file_data):
                 print(f"Error: Index {index} is out of range for current file_data with length {len(file_data)}. Skipping this file.")
                 continue
-            _, all_predictions, all_log_probs, all_probs = file_data[index]
+            _, all_predictions, all_log_probs, all_probs, all_dists = file_data[index]
             predictions = all_predictions.split('|')
+            dists = all_dists.split('|')
+            denorm_probs = [float(p) for p in all_probs.split('|')]
             if use_log_probs:
                 log_probs = all_log_probs.split('|')
                 probs = log_probs_to_probs([float(lp) for lp in log_probs])
             else:
-                probs = [float(p) for p in all_probs.split('|')]
+                probs = denorm_probs
 
-            for pred, prob in zip(predictions, probs):
+            for pred, prob, dist, denorm_probs in zip(predictions, probs, dists, denorm_probs):
                 if pred not in sequence_probs:
                     sequence_probs[pred] = []
                 sequence_probs[pred].append(prob)
+                if pred not in sequence_denorm_probs:
+                    sequence_denorm_probs[pred] = []
+                sequence_denorm_probs[pred].append(denorm_probs)
+                sequence_dists[pred] = dist
 
-        for pred, probs in sequence_probs.items():
-            denominator = len(files_data) * len(pred.split())
-            if denominator == 0:
-                print(f"Warning: Denominator is zero for pred: {pred}")
-                sequence_probs[pred] = 0
-            else:
-                sequence_probs[pred] = sum(probs) / denominator
+        # No need to divide, order of probs doesn't change
+        # for pred, probs in sequence_probs.items():
+        #     denominator = len(files_data)
+        #     if denominator == 0:
+        #         print(f"Warning: Denominator is zero for pred: {pred}")
+        #         sequence_probs[pred] = 0
+        #     else:
+        #         sequence_probs[pred] = sum(probs) / denominator
 
         best_prediction = max(sequence_probs, key=sequence_probs.get)
         best_prob = sequence_probs[best_prediction]
         target = row[0]
 
-        # Calculate the edit distance between best_prediction and target
-        edit_dist = edit_distance(best_prediction, target)
+        # Retrieve the edit distance for the best prediction
+        edit_dist = sequence_dists[best_prediction]
 
         if best_prediction == target:
             correct_predictions += 1
 
-        entropy = calculate_entropy(torch.tensor(list(sequence_probs.values())))
+        # Calculate entropy using denormalized probability
+        entropy = calculate_entropy(torch.tensor(list(sequence_denorm_probs.values())))
         results.append(
             (best_prediction, target, best_prob, entropy.item(), edit_dist))
 
