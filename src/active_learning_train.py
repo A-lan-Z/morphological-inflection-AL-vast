@@ -303,6 +303,11 @@ class Trainer(BaseTrainer):
                         all_log_probs = [str(log_prob.cpu().item()) for log_prob in all_log_probs]
                         probs = [str(prob.cpu().item()) for prob in probs]
 
+                        all_sequences = [str(item) for item in all_sequences]
+                        all_log_probs = [str(item) for item in all_log_probs]
+                        probs = [str(item) for item in probs]
+                        dists = [str(item) for item in dists]
+
                         fp.write(f'{" ".join(t)}\t{"|".join(all_sequences)}\t{"|".join(all_log_probs)}\t{"|".join(probs)}\t{"|".join(dists)}\n')
                         cnt += 1
                 else:

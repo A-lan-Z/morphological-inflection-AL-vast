@@ -32,7 +32,7 @@ def log_probs_to_probs(log_probs):
 
 
 def calculate_entropy(probs):
-    return -sum(p * torch.log(p) for p in probs if p > 0)
+    return -sum(p * torch.log(p) for p in probs if p >= 0.05)
 
 
 def calculate_average_probability(files_data, use_log_probs=False):
