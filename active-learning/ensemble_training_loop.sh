@@ -9,7 +9,7 @@ for suffix in al; do
 
 #        2594 28399 15102 506 27827
         # Loop to run the training 5 times
-        for i in {1..1}; do
+        for i in {1..25}; do
             python active-learning/difficulty_evaluator.py "${lang}_al.train" "${lang}.gold"
 
             for seed in 2594 28399 15102 506 27827; do
@@ -38,7 +38,7 @@ for suffix in al; do
                 rm -f checkpoints/sig22/transformer/*epoch_[0-9]*
             done
             python active-learning/ensemble_predict.py "$i" true
-            python active-learning/ensemble_resample.py "$i" "$train_file" "$pool_file"
+            python active-learning/ensemble_resample.py "$i" "$train_file" "$pool_file" edit_distance
         done
     done
 done

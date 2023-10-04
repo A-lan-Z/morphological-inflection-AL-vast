@@ -3,14 +3,17 @@
 model=transformer
 
 for suffix in al; do
-    for lang in kor; do
+    for lang in vep; do
         # Backup the initial training and pool data
         cp "dataset/${lang}_al.train" "dataset/${lang}_al.train_backup"
         cp "dataset/${lang}_pool.train" "dataset/${lang}_pool.train_backup"
 
 #        2594 28399 15102 506 27827
         # Loop to run the training 5 times
-        for seed in 2594; do
+        for seed in 2594 28399 15102 506 27827; do
+            # Restore the density data from the backup at the beginning of each seed iteration
+            cp "active-learning/${lang}_density_backup.tsv" "active-learning/${lang}_density.tsv"
+
             # Restore the training and pool data to their initial states
             cp "dataset/${lang}_al.train_backup" "dataset/${lang}_al.train"
             cp "dataset/${lang}_pool.train_backup" "dataset/${lang}_pool.train"
@@ -29,7 +32,7 @@ for suffix in al; do
                     fi
                 done
 
-                bash active-learning/al_eval.sh $lang $model $suffix $seed smart entropy
+                bash active-learning/al_eval.sh $lang $model $suffix $seed smart random
 
                 # Delete model checkpoints and decode
                 rm -f checkpoints/sig22/transformer/*epoch_[0-9]*

@@ -30,12 +30,14 @@ def compute_density(lemmas, charset):
 def save_to_file(lemmas, densities, filename):
     print(f"Saving results to {filename}...")
     with open(filename, 'w', encoding='utf-8') as file:
-        for lemma, density in zip(lemmas, densities):
-            file.write(f"{lemma}\t{density}\n")
+        # Write headers
+        file.write("index\tlemma\tinformation density\n")
+        for index, (lemma, density) in enumerate(zip(lemmas, densities)):
+            file.write(f"{index}\t{lemma}\t{density}\n")
     print("Results saved successfully!")
 
 def main():
-    input_file = '../dataset/kor_pool.train'
+    input_file = 'dataset/kor_pool.train'
     output_file = 'kor_density.tsv'
 
     print(f"Reading data from {input_file}...")

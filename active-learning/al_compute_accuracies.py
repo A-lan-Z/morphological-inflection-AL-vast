@@ -50,7 +50,7 @@ def process_directory(directory, accuracy_output_file, difficulty_output_file, d
         if filename.endswith(".tsv") and '.decode.test_' in filename:
             test_name = filename.split('.decode.')[1].split('.tsv')[0]
             test_num = test_name.split('_')[-1]
-            difficulty_file_path = f"../experiments/experiment_{experiment}/{language}/{seed}/{seed}_{language}_difficulty_{test_num}.tsv"  # Define the difficulty_file_path here
+            difficulty_file_path = f"../experiments/experiment_{experiment}/{language}/{seed}/{seed}_{language}_difficulty_25.tsv"
             correct_indices, dist_values = get_correct_indices_and_dists(os.path.join(directory, filename))
             overall_accuracy, difficulty_accuracies, difficulties_total, overall_dist, difficulty_dists = compute_accuracies(
                 difficulty_file_path, correct_indices, dist_values)
@@ -81,6 +81,15 @@ def process_directory(directory, accuracy_output_file, difficulty_output_file, d
     print(f"Dist results written to {dist_output_file}")
 
 
+def get_filename_suffix(experiment):
+    if experiment == "1":
+        return "_random.tsv"
+    elif experiment == "3":
+        return "_entropy.tsv"
+    else:
+        return ".tsv"
+
+
 if __name__ == "__main__":
     languages = input("Please enter the language codes separated by commas (e.g. khk,kor_1st,eng): ").strip().split(',')
     seeds = input("Please enter the seeds separated by commas: ").strip().split(',')
@@ -94,9 +103,12 @@ if __name__ == "__main__":
         for seed in seeds:
             for experiment in experiments:
                 directory_path = f"../experiments/experiment_{experiment.strip()}/{language.strip()}/{seed.strip()}"
-                accuracy_output_file_path = f"../experiments/experiment_{experiment.strip()}/{language.strip()}/{seed.strip()}_{language.strip()}_accuracies.tsv"
-                difficulty_output_file_path = f"../experiments/experiment_{experiment.strip()}/{language.strip()}/{seed.strip()}_{language.strip()}_difficulties.tsv"
-                dist_output_file_path = f"../experiments/experiment_{experiment.strip()}/{language.strip()}/{seed.strip()}_{language.strip()}_dist.tsv"
 
-                process_directory(directory_path, accuracy_output_file_path, difficulty_output_file_path, dist_output_file_path)
+                suffix = get_filename_suffix(experiment.strip())
+                accuracy_output_file_path = f"../experiments/experiment_{experiment.strip()}/{language.strip()}/{seed.strip()}_{language.strip()}_accuracies{suffix}"
+                difficulty_output_file_path = f"../experiments/experiment_{experiment.strip()}/{language.strip()}/{seed.strip()}_{language.strip()}_difficulties{suffix}"
+                dist_output_file_path = f"../experiments/experiment_{experiment.strip()}/{language.strip()}/{seed.strip()}_{language.strip()}_dist{suffix}"
+
+                process_directory(directory_path, accuracy_output_file_path, difficulty_output_file_path,
+                                  dist_output_file_path)
 

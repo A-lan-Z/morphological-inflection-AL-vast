@@ -334,47 +334,46 @@ class Trainer(BaseTrainer):
         else:
             return None, None, None
 
-    def al_sampling(self, criteria, criteria_list, num_samples=100, beta=1.0):
+    def al_sampling(self, criteria, criteria_list, lang_code="kor", num_samples=100, beta=1.0):
         print(f"Starting al_sampling with criteria: {criteria}, num_samples: {num_samples}, beta: {beta}")
 
-        # If the criteria is "information_density", read the kor_density.tsv and compute the information density
         if criteria == "information_density":
-            with open('kor_density.tsv', 'r', encoding="utf-8") as f:
-                lines = f.readlines()
-                # Extracting density values from the file
-                density_values = [float(line.strip().split('\t')[1]) for line in lines]
-                print(f"Read {len(density_values)} density values from kor_density.tsv")
-                # Multiplying density with entropy to get information density
-                criteria_list = [entropy * (density ** (-beta)) for density, entropy in
-                                 zip(density_values, criteria_list)]
+            file_name = f"active-learning/{lang_code}_density.tsv"
+            print(f"Reading density values from {file_name}...")
+            with open(file_name, 'r', encoding="utf-8") as f:
+                lines = f.readlines()[1:]  # Skip the header by starting from the second line
+                density_values = [float(line.strip().split('\t')[2]) for line in lines]
+                print(f"Read {len(density_values)} density values from {file_name}")
 
-        # Before sorting and selecting uncertain samples
+            print("Computing information density...")
+            criteria_list = [entropy * (density ** beta) for density, entropy in zip(density_values, criteria_list)]
+            print("Information density computation completed.")
+
         print(f"Size of criteria_list: {len(criteria_list)}")
         unique_criteria_values = len(set(criteria_list))
         duplicate_values = len(criteria_list) - unique_criteria_values
         print(f"Number of unique values in criteria_list: {unique_criteria_values}")
         print(f"Number of duplicate values in criteria_list: {duplicate_values}")
 
-        # Sort the criteria_list and get indices of the top uncertain samples
+        print("Sorting and selecting top uncertain samples...")
         uncertain_samples_indices = sorted(range(len(criteria_list)), key=lambda i: criteria_list[i], reverse=True)[
                                     :num_samples]
         print(f"Selected {len(uncertain_samples_indices)} uncertain samples indices")
 
-        # Get the test data
+        print("Reading test data...")
         test_data = list(self.data.read_file(self.data.test_file))
         print(f"Read {len(test_data)} samples from test data")
 
-        # Get the uncertain samples from the test data
+        print("Extracting uncertain samples from test data...")
         uncertain_samples = [test_data[i] for i in uncertain_samples_indices]
 
-        # Step 1: Remove the selected uncertain samples from the test data
+        print("Removing selected uncertain samples from test data...")
         for sample in uncertain_samples:
             test_data.remove(sample)
 
-        # Step 2: Rewrite the test file without the selected uncertain samples
+        print("Rewriting the test file without the selected uncertain samples...")
         with open(self.data.test_file, 'w', encoding="utf-8") as f:
             for lemma, word, tags in test_data:
-                # Convert lists to strings if necessary
                 if isinstance(lemma, list):
                     lemma = ''.join(lemma)
                 if isinstance(word, list):
@@ -382,11 +381,11 @@ class Trainer(BaseTrainer):
                 if isinstance(tags, list):
                     tags = ';'.join(tags)
                 f.write(f"{lemma}\t{word}\t{tags}\n")
+        print("Test file rewrite completed.")
 
-        # Append the uncertain samples to the training file
+        print("Appending the uncertain samples to the training file...")
         with open(self.data.train_file, 'a', encoding="utf-8") as f:
             for lemma, word, tags in uncertain_samples:
-                # Convert lists to strings if necessary
                 if isinstance(lemma, list):
                     lemma = ''.join(lemma)
                 if isinstance(word, list):
@@ -394,17 +393,25 @@ class Trainer(BaseTrainer):
                 if isinstance(tags, list):
                     tags = ';'.join(tags)
                 f.write(f"{lemma}\t{word}\t{tags}\n")
+        print("Uncertain samples appended to training file.")
 
-        # If the criteria is "information_density", update the kor_density.tsv to synchronize with the changes in the test pool
         if criteria == "information_density":
-            # Remove the densities of the selected uncertain samples
-            for i in uncertain_samples_indices:
-                del density_values[i]
+            file_name = f"active-learning/{lang_code}_density.tsv"
+            print(f"Updating {file_name}...")
 
-            # Rewrite the kor_density.tsv without the densities of the selected uncertain samples
-            with open('kor_density.tsv', 'w', encoding="utf-8") as f:
-                for lemma, density in zip([data[0] for data in test_data], density_values):
-                    f.write(f"{lemma}\t{density}\n")
+            # Read all lines from the file
+            with open(file_name, 'r', encoding="utf-8") as f:
+                lines = f.readlines()
+
+            # Delete lines corresponding to the uncertain_samples_indices
+            for i in sorted(uncertain_samples_indices, reverse=True):
+                del lines[i + 1]
+
+            # Write the modified lines back to the file
+            with open(file_name, 'w', encoding="utf-8") as f:
+                f.writelines(lines)
+
+            print(f"{file_name} updated.")
 
         print("Finished al_sampling")
 
