@@ -3,12 +3,11 @@
 model=transformer
 
 for suffix in al; do
-    for lang in vep; do
+    for lang in ara; do
 
         train_file="dataset/${lang}_al.train"
         pool_file="dataset/${lang}_pool.train"
 
-#        2594 28399 15102 506 27827
         # Loop to run the training 5 times
         for i in {1..25}; do
             python active-learning/difficulty_evaluator.py "${lang}_al.train" "${lang}.gold"
@@ -26,7 +25,10 @@ for suffix in al; do
                     fi
                 done
 
-                bash active-learning/al_ensemble_eval.sh $lang $model $suffix $seed smart ensemble
+                # Execute the command only when seed is 2594
+                if [ "$seed" -eq 2594 ]; then
+                    bash active-learning/al_ensemble_eval.sh $lang $model $suffix $seed smart ensemble
+                fi
 
                 for tsv_file in checkpoints/sig22/transformer/*[^0-9].tsv; do
                     if [ -f "$tsv_file" ]; then
@@ -39,7 +41,7 @@ for suffix in al; do
                 rm -f checkpoints/sig22/transformer/*epoch_[0-9]*
             done
             python active-learning/ensemble_predict.py "$i" true
-            python active-learning/ensemble_resample.py "$i" "$train_file" "$pool_file" entropy
+            python active-learning/ensemble_resample.py "$i" "$train_file" "$pool_file" edit_distance
         done
     done
 done

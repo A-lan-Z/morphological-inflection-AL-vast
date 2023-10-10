@@ -334,7 +334,7 @@ class Trainer(BaseTrainer):
         else:
             return None, None, None
 
-    def al_sampling(self, criteria, criteria_list, lang_code="kor", num_samples=100, beta=1.0):
+    def al_sampling(self, criteria, criteria_list, lang_code="vep", num_samples=100, beta=1.0):
         print(f"Starting al_sampling with criteria: {criteria}, num_samples: {num_samples}, beta: {beta}")
 
         if criteria == "information_density":

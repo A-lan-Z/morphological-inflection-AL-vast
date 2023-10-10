@@ -32,7 +32,7 @@ for suffix in al; do
                     fi
                 done
 
-                bash active-learning/al_eval.sh $lang $model $suffix $seed smart random
+                bash active-learning/al_eval.sh $lang $model $suffix $seed smart information_density
 
                 # Delete model checkpoints and decode
                 rm -f checkpoints/sig22/transformer/*epoch_[0-9]*
